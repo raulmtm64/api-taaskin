@@ -42,4 +42,5 @@ $app->get('/login', function (Request $request,Response $response){
     // } catch (PDOException $e){
     //     echo '{"error" : {"text":'.$e->getMessage().'}'-;
     // }
+    echo "Hola";
 });

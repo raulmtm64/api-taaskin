@@ -1,46 +1,36 @@
 <?php
+header("Content-Type: application/json");
+header('Access-Control-Allow-Origin: *');
+
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
 $app = new \Slim\App(['settings' => ['displayErrorDetails' => true]]);
 
-// require '../src/config/db.php';
-
-$app->get('/login', function (Request $request,Response $response){
+$app->post('/login', function (Request $request,Response $response){
+            
     $user = $request->getParam('email');
     $pw = $request->getParam('password');
-    
-    // $connec = new DB();
-    // $connec = $connec->dbConnect();
-    // $sqlQuery = "SELECT * FROM users WHERE email = `${email}` AND passwd = `${pw}`";
-    // $stmt = $connec->prepare($sqlQuery);
-    
-    // $stmt->execute();
+    $sqlQuery = "SELECT id_user, nick, email, password, typeof FROM users WHERE email = '$user'";
 
-    // while($registro=$stmt->fetch(PDO::FETCH_ASSOC)){
-    //     print_r($registro);
-    // }
+    try{
+        $db = new DB();
+        $db = $db->dbConnect();
+        $result = $db->query($sqlQuery);
 
-    // $connec = null;
-
-
-
-
-    // try{
-    //     $db = new DB();
-    //     $db = $db->dbConnect();
-    //     $result = $db->query($sqlQuery);
-
-    //     if($result->rowCount() >0){
-    //         $users = $result->fetchAll(PDO::FETCH_OBJ);
-    //         echo json_encode($users);
-    //     } else {
-    //         echo json_encode("No existen usuarios");
-    //     }
-    //     $result = null;
-    //     $db = null;
-    // } catch (PDOException $e){
-    //     echo '{"error" : {"text":'.$e->getMessage().'}'-;
-    // }
-    echo "Hola";
+        if($result->rowCount() == 1){
+            $users = $result->fetchAll(PDO::FETCH_OBJ);
+            $array  = json_decode(json_encode($users[0]), true);
+            $hashedPass = $array["password"];
+            if (password_verify($pw, $hashedPass)){
+                echo json_encode($array);
+            }
+        } else {
+            echo json_encode("Usario o contraseña incorrecto");
+        }
+        $result = null;
+        $db = null;
+    } catch (PDOException $e){
+        echo '{"error" : {"text":'.$e->getMessage().'}';
+    }
 });
